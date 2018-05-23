@@ -1,0 +1,13 @@
+---
+- name: Install IdM RPMs
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - ipa-server
+    - ipa-server-dns
+  tags: idm
+
+- name: Configure IdM
+  command: ipa-server-install -U --hostname={{ idm_hostname }} --domain={{ idm_domain }} --realm={{ idm_realm }} --ds-password={{ idm_dir_admin_password}} --admin-password={{ idm_admin_password }} --setup-dns --forwarder '{{ idm_forward_ip }}' --mkhomedir
+  tags: idm

@@ -1,0 +1,70 @@
+---
+- hosts: all
+  connection: local
+
+  tasks:
+    - name: Generate the root password hash for kickstart template (would prefer a prompt, as password is stored in variables file)
+      local_action: command python -c 'import crypt; print crypt.crypt("{{ idm_kickstart_root_password }}", "$6$3dgaQk0H")'
+      register: root_pass_hash
+      tags:
+        - kickstart
+
+    - name: Generate the ansible user password hash for kickstart template (would prefer a prompt, as password is stored in variables file)
+      local_action: command python -c 'import crypt; print crypt.crypt("{{ ansible_kickstart_password }}", "$6$3dgaQk0H")'
+      register: ansible_pass_hash
+      tags:
+        - kickstart
+
+    - name: Create IdM Kickstart file
+      template:
+        src: "../templates/idm-ks.cfg.j2"
+        dest: /var/www/html/idm-ks.cfg
+        mode: 0644
+      become: yes
+      tags:
+        - kickstart
+
+    - name: restorecon on /var/www/html
+      command: restorecon -Rv /var/www/html
+      become: yes
+      tags:
+        - deploy
+
+#    - name: Workaround - Need to remove ssh hostkey in /root/.ssh/known_hosts. Even though we have SSH hostkey checking disabled in ansible.cfg, this still occurs
+#      command: ssh-keygen -R {{tower_hostname}}
+#      become: yes
+#      tags:
+#        - deploy
+
+    - name: Install DEMO-IdM from Kickstart on 'default' network
+      command: virt-install --name DEMO-IdM --memory {{idm_memory}} --vcpus {{idm_vcpus}} --disk size=30,pool={{libvirt_storage_pool_name}} --location /home/{{laptop_local_user}}/{{libvirt_storage_pool_name}}/original/rhel-server-7.4-x86_64-dvd.iso --extra-args "ks=http://{{libvirt_ip_address}}/idm-ks.cfg" --os-type linux --noautoconsole
+      become: yes
+      tags: deploy
+
+    - name: check that DEMO-IdM VM is stopped
+      action: virt name=DEMO-IdM command=status
+      register: result
+      until: result.status.find("shutdown") != -1
+      retries: 100
+      delay: 5
+      become: yes
+      tags: deploy
+
+    - name: Update Network Source from 'default' to '{{libvirt_network_name}}'
+      script: files/vifmove.sh DEMO-IdM - {{libvirt_network_name}}
+      become: yes
+      tags: deploy
+
+    - name: Start the VM
+      command: virsh start DEMO-IdM
+      become: yes
+      tags: deploy
+
+    - name: Wait for SSH to come up on IdM
+      local_action:
+        module: wait_for
+          host={{ idm_hostname }}
+          port=22
+          delay=1
+          timeout=300
+      tags: deploy

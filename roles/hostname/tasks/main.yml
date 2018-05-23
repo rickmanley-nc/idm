@@ -1,0 +1,4 @@
+---
+- name: Set hostname
+  command: hostnamectl set-hostname {{ idm_hostname }}
+  tags: hostname
