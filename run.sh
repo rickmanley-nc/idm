@@ -9,3 +9,6 @@ source ~/.bashrc
 exit 0
 
 # wget -qO- https://github.com/rickmanley-nc/idm/raw/master/run.sh | bash
+# virsh suspend DEMO-IdM
+# virt-clone --connect qemu:///system --original DEMO-IdM --name DEMO-IdM-Clone --file /home/rnelson/Images/DEMO-IdM-Clone.qcow2
+# virsh resume DEMO-IdM

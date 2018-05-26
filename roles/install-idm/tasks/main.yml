@@ -8,6 +8,11 @@
     - ipa-server-dns
   tags: idm
 
-- name: Configure IdM
-  command: ipa-server-install -U --hostname={{ idm_hostname }} --domain={{ idm_domain }} --realm={{ idm_realm }} --ds-password={{ idm_dir_admin_password}} --admin-password={{ idm_admin_password }} --setup-dns --forwarder '{{ idm_forward_ip }}' --mkhomedir
+# Due to https://bugzilla.redhat.com/show_bug.cgi?id=1504688, we may need to reboot client after installing RPMs.
+
+- name: Configure IdM, test with forwarder
+  command: ipa-server-install -U --hostname={{ idm_hostname }} --domain={{ idm_domain }} --realm={{ idm_realm }} --ds-password={{ idm_dir_admin_password}} --admin-password={{ idm_admin_password }} --ssh-trust-dns --setup-dns --forwarder '{{ idm_forward_ip }}' --mkhomedir
   tags: idm
+
+## test with no forwarders
+## ipa-server-install -U --hostname=idm.rnelson-demo.com --domain=rnelson-demo.com --realm=RNELSON-DEMO.COM --ds-password=redhatrocks --admin-password=redhatrocks --ssh-trust-dns --setup-dns --no-forwarders --mkhomedir
