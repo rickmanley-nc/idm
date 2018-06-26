@@ -1,0 +1,53 @@
+---
+- name: obtaining TGT for admin@rnelson-demo.com (This is a no-no... proper way is to create a keytab for the principal and auth with -k -t /path/to/keytab)
+  shell: echo "{{idm_register_password}}" | kinit "{{idm_register_username}}"@"{{idm_realm}}"
+  tags: populate
+
+- name: Create Groups
+  ipa_group:
+    name: "{{item}}"
+    state: present
+    ipa_host: "{{idm_hostname}}"
+    ipa_user: "{{idm_register_username}}"
+    ipa_pass: "{{idm_register_password}}"
+  with_items:
+    - developer-admin
+    - developer
+    - operations-admin
+    - operations-jr-admin
+    - lob
+
+- name: Create Nested Group - ansible-admin
+  ipa_group:
+    name: ansible-admin
+    state: present
+    group:
+      - operations-admin
+    ipa_host: "{{idm_hostname}}"
+    ipa_user: "{{idm_register_username}}"
+    ipa_pass: "{{idm_register_password}}"
+
+- name: Create Users
+- ipa_user:
+    name: dev-admin
+    state: present
+    givenname: Tammy
+    sn: Larsen
+    password:
+    ipa_host: "{{idm_hostname}}"
+    ipa_user: "{{idm_register_username}}"
+    ipa_pass: "{{idm_register_password}}"
+
+
+NEED TO CREATE EACH INDIVIDUALLY... UNLESS THERE IS A KNOWN PLAYBOOK UPSTREAM. Issue is with group memberships
+
+User:
+Tammy Larsen ... uid 'dev-admin' and add 'developer-admin' Group
+Jimmy Pesto ... uid 'dev' and add 'developer' Group
+Turd Ferguson ... uid 'ops-admin' and add 'operations-admin' Group
+Randy Flanders ... uid 'ops-jr' and add 'operations-jr-admin' Group
+Louise Belcher ... uid 'lobuser' and add 'lob' Group
+
+Host Group, development-servers.
+Create Automember role for development-servers, ipa automember-add --type=hostgroup development-servers
+--- need to find out what the regex should be --- Create Automember role condition,  ipa automember-add-condition –-key=userclass --type=hostgroup --inclusive-regex=^Development_Servers development-servers
