@@ -56,3 +56,6 @@ idm_rdns: 126.168.192.in-addr.arpa
 
 ##Local username on Laptop##
 laptop_local_user:         rnelson
+
+## file name for ISO
+rhel_iso_media: rhel-server-7.5-x86_64-dvd.iso
