@@ -41,8 +41,8 @@ ansible_kickstart_password: RedHat1!
 libvirt_storage_pool_name: Images
 libvirt_ip_address:        192.168.126.1
 libvirt_netmask:           255.255.255.0
-libvirt_bridge_name:       virbr3
-libvirt_network_name:      sat-isolated
+libvirt_bridge_name:       virbr5
+libvirt_network_name:      rnelson-demo
 ##IdM Configure Section
 idm_register_username: admin
 idm_register_password: redhatrocks
